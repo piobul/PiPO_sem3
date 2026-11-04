@@ -8,14 +8,12 @@
  
  */
 
-
 using System;
 
 public class Employee
 {
     public string Name { get; set; }
     protected int employeeId;
-
     public Employee(string name, int id)
     {
         Name = name;
@@ -24,16 +22,14 @@ public class Employee
 
     public virtual void Describe()
     {
-        Console.WriteLine($"Pracownik: {Name} (ID: {employeeId})");
+        Console.WriteLine($"Employee: {Name} (ID: {employeeId})");
     }
 }
 
 public class Operator : Employee
 {
     protected int licenseLevel;
-
-    public Operator(string name, int id, int license)
-        : base(name, id)
+    public Operator(string name, int id, int license) : base(name, id)
     {
         licenseLevel = license;
     }
@@ -41,23 +37,22 @@ public class Operator : Employee
     public override void Describe()
     {
         base.Describe();
-        Console.WriteLine($"  Operator, poziom licencji: {licenseLevel}");
+        Console.WriteLine($"    Operator, license level: {licenseLevel}");
     }
 }
 
 public class ReactorOperator : Operator
 {
-    private string assignedReactor;
+    public string assignedReactor;
 
-    public ReactorOperator(string name, int id, int license, string reactor)
-        : base(name, id, license)
+    public ReactorOperator(string name, int id, int license, string reactor) : base(name, id, license)
     {
         assignedReactor = reactor;
     }
 
     public void MonitorReactor()
     {
-        Console.WriteLine($"{Name} monitoruje reaktor {assignedReactor}.");
+        Console.WriteLine($"{Name} is monitoring reactor {assignedReactor}.");
     }
 }
 
@@ -65,15 +60,14 @@ public class ShiftSupervisor : Operator
 {
     private int teamSize;
 
-    public ShiftSupervisor(string name, int id, int license, int team)
-        : base(name, id, license)
+    public ShiftSupervisor(string name, int id, int license, int team) : base(name, id, license)
     {
         teamSize = team;
     }
 
     public void StartShift()
     {
-        Console.WriteLine($"{Name} rozpoczyna zmianę z zespołem {teamSize} osób.");
+        Console.WriteLine($"{Name} started shift with team of {teamSize} people.");
     }
 }
 
@@ -81,8 +75,7 @@ public class SafetyInspector : Employee
 {
     protected int inspectionsDone;
 
-    public SafetyInspector(string name, int id, int inspections)
-        : base(name, id)
+    public SafetyInspector(string name, int id, int inspections) : base(name, id)
     {
         inspectionsDone = inspections;
     }
@@ -90,7 +83,7 @@ public class SafetyInspector : Employee
     public void Inspect()
     {
         inspectionsDone++;
-        Console.WriteLine($"{Name} przeprowadził inspekcję nr {inspectionsDone}.");
+        Console.WriteLine($"{Name} has done an inspection no.{inspectionsDone}.");
     }
 }
 
@@ -98,16 +91,15 @@ public class RadiationInspector : SafetyInspector
 {
     private double maxDoseLimit;
 
-    public RadiationInspector(string name, int id, int inspections, double doseLimit)
-        : base(name, id, inspections)
+    public RadiationInspector(string name, int id, int inspections, double doseLimit) : base(name, id, inspections)
     {
         maxDoseLimit = doseLimit;
     }
 
     public void MeasureRadiation(double measured)
     {
-        string status = measured <= maxDoseLimit ? "w normie" : "PRZEKROCZONA NORMA";
-        Console.WriteLine($"{Name}: pomiar {measured} mSv (limit {maxDoseLimit}) - {status}.");
+        string status = measured <= maxDoseLimit ? "OK" : "TOO HIGH RADIATION";
+        Console.WriteLine($"    {Name} measured {measured} mSv (limit {maxDoseLimit}) - {status}.");
     }
 }
 
@@ -115,8 +107,8 @@ class Program
 {
     static void Main()
     {
-        ReactorOperator op = new ReactorOperator("Jan Kowalski", 101, 3, "Reaktor A");
-        ShiftSupervisor sup = new ShiftSupervisor("Anna Nowak", 102, 5, 12);
+        ReactorOperator op = new ReactorOperator("Wojciech Szczęsny", 101, 3, "Reactor A");
+        ShiftSupervisor sup = new ShiftSupervisor("Holandia SUPERVISOR", 102, 5, 12);
         RadiationInspector rad = new RadiationInspector("Piotr Zieliński", 201, 7, 20.0);
 
         op.Describe();
