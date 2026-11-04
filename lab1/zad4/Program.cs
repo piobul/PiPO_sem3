@@ -21,6 +21,18 @@ public class Animal
 
 public class Bird : Animal
 {
+    protected int numberOfFeathers;
+
+    public Bird() : base()
+    {
+        numberOfFeathers = 0;
+    }
+
+    public Bird(string _name, int _weight, int _feathers) : base(_name, _weight)
+    {
+        numberOfFeathers = _feathers;
+    }
+
     public void TestAccess()
     {
         Name = "Ćwirek";
@@ -37,6 +49,8 @@ public class Bird : Animal
 
 public class Flamingo : Bird
 {
+    public Flamingo() : base() {}
+    public Flamingo(string _name, int _weight, int _feathers) : base(_name, _weight, _feathers) {}
     public void TestAccess()
     {
         Name = "Różowy Ćwirek";
@@ -59,7 +73,11 @@ class Program
         Bird myBigBird = new Bird();
         Flamingo myPinkFlamingo = new Flamingo();
 
-        // Bird mySecondBigBird = new Bird("Tweety", 5);                        // Błąd kompilacji - klasy nie dziedziczą bezpośrednio konstruktorów
-        // Flamingo mySecondPinkFlamingo = new Flamingo("Pinky", 10);           // Błąd kompilacji - klasy nie dziedziczą bezpośrednio konstruktorów
+        Bird mySecondBigBird = new Bird("Tweety", 5, 1000);
+        Flamingo mySecondPinkFlamingo = new Flamingo("Pinky", 10, 20000);
+
+        mySecondPinkFlamingo.Incubation(2, 30);
     }
 }
+
+// Teraz program kompiluje sie, ponieważ każda z klas ma swoje konstruktory
