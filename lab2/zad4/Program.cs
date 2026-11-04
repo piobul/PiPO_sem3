@@ -1,5 +1,10 @@
 ﻿using System;
 
+public interface IBuyTicket
+{
+    void BuyTicket();
+}
+
 public abstract class Vehicle
 {
     protected string engineType;
@@ -57,12 +62,17 @@ public class Car : Vehicle
         return "car";
     }
 }
-public class Bus : Vehicle
+public class Bus : Vehicle, IBuyTicket
 {
     public Bus(string engine, double velocity, double length, int seats) : base(engine, velocity, length, seats) { }
     public override string GetVehicleType()
     {
         return "bus";
+    }
+
+    public void BuyTicket()
+    {
+        Console.WriteLine("Bus ticket - bought");
     }
 }
 
@@ -70,13 +80,7 @@ class Program
 {
     static void Main()
     {
-        List<Vehicle> myVehicles = new List<Vehicle>();
-        myVehicles.Add(new Train("electric", 120.0, 250.0, 2));
-        myVehicles.Add(new Bus("diesel", 150.0, 14.0, 52));
-        myVehicles.Add(new Car("hybrid", 240.0, 2.5, 5));
-        foreach (Vehicle v in myVehicles)
-        {
-            Console.WriteLine(v);
-        }
+        IBuyTicket ticket = new Bus("diesel", 150.0, 15.0, 54);
+        ticket.BuyTicket();
     }
 }
