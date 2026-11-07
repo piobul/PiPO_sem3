@@ -29,13 +29,5 @@ namespace zad1
                 volume = value / density;
             }
         }
-        protected double Density
-        {
-            get { return density; }
-            set
-            {
-                density = value;
-            }
-        }
     }
 }
