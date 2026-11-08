@@ -7,7 +7,7 @@ namespace zad1
     internal class FuelTank : IVisitPort
     {
         private Fuel fuel;
-        protected double Cost
+        private double Cost
         {
             get
             {
@@ -16,7 +16,7 @@ namespace zad1
                 } else if (fuel.Type == "nuclear") {
                     return 5000;
                 }
-                throw new InvalidOperationException();
+                throw new InvalidOperationException("Invalid fuel type: " + fuel.Type);
             }
         }
         public double MaxCapacity { get; }

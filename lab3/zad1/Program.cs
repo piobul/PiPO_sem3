@@ -12,7 +12,7 @@ namespace zad1
             Console.WriteLine();
 
             // now we are ready for the submarine simulation
-            // Submarine.Demo();
+            Submarine.Demo();
         }
     }
 }

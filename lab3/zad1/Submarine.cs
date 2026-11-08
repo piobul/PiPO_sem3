@@ -6,7 +6,7 @@ namespace zad1
 {
     class Submarine
     {
-		/*
+		
 		
         // this is the actual submarine simulation
         public static void Demo()
@@ -93,6 +93,6 @@ namespace zad1
             } 
         }
 
-		*/
+		
     }
 }

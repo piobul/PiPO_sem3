@@ -21,6 +21,7 @@ namespace zad1
 
         public double GetVelocity(double submarineWeight)
         {
+            if (submarineWeight <= 0) throw new ArgumentException("Submarine weight is zero!");
             return VelocityConstant/submarineWeight;
         }
 
