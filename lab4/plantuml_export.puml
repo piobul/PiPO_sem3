@@ -1,0 +1,214 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+hide empty members
+hide circle
+
+package core {
+  abstract class Fuel {
+    # massKg : double
+    # enrichment : double
+    + Fuel(massKg:double, enrichment:double)
+    + {abstract} GetThermalPower() : double
+  }
+  
+  class UraniumFuel {
+    - uraniumType : string
+    + GetThermalPower() : double
+  }
+  
+  class MOXFuel {
+    - plutoniumShare : double
+    + GetThermalPower() : double
+  }
+  
+  class FuelRod {
+    - temperature : double
+    + FuelRod(fuel:Fuel)
+    + Heat(flux:double) : void
+    + GetTemperature() : double
+  }
+  
+  class ControlRod {
+    - insertionLevel : double
+    + Insert(level:double) : void
+    + GetInsertionLevel() : double
+  }
+  
+  class Moderator {
+    - type : ModeratorType
+    + Moderate(neutronFlux:double) : double
+  }
+  
+  class ReactorCore {
+    - fuelRods : List<FuelRod>
+    - controlRods : List<ControlRod>
+    + ReactorCore(fuelRodCount:int)
+    + GetTotalPower() : double
+    + Scram() : void
+  }
+  
+  class Reactor {
+    - state : ReactorState
+    + Reactor(core:ReactorCore, moderator:Moderator)
+    + Start() : void
+    + Stop() : void
+    + GetReactorState() : ReactorState
+    + GetPowerOutput() : double
+    + RemoveHeat(core:ReactorCore, amount:double) : double
+  }
+  
+  enum ReactorState {
+    STOPPED
+    RUNNING
+    EMERGENCY
+  }
+  
+  enum ModeratorType {
+    WATER
+    GRAPHITE
+    HEAVY_WATER
+  }
+  
+  ' note '
+  note right of Fuel
+    GetThermalPower() is polymorphic
+    because Uranium and MOX react
+    differently
+  endnote
+}
+
+package control {
+  abstract class Sensor {
+    # alarmThreshold : double
+    # monitoredCore : ReactorCore
+    # measuredValue : double
+    + {abstract} Measure() : double
+    + IsThresholdExceeded() : bool
+  }
+  
+  class TemperatureSensor {
+    - unit : string
+    + Measure() : double
+  }
+  
+  class PressureSensor {
+    - maxPressureBar : double
+    + Measure() : double
+  }
+  
+  class RadiationSensor {
+    - calibrationFactor : double
+    + Measure() : double
+  }
+  
+  class ControlRoom {
+    - sensors : List<Sensor>
+    - operators : List<Operator>
+    - alarm : Alarm
+    - reactor : Reactor
+    + MonitorSensors() : void
+    + RaiseAlarm(level:AlarmLevel) : void
+    + GetOperatorOnDuty() : Operator
+  }
+  
+  class Operator {
+    # name : string
+    # clearanceLevel : int
+    + AnswerAlarm(alarm:Alarm) : void
+    + InitiateScram(reactorCore:ReactorCore) : void
+  }
+  
+  class Alarm {
+    - level : AlarmLevel
+    # alarmCode : int
+    + Trigger(level:AlarmLevel) : void
+    + Silence() : void
+  }
+  
+  enum AlarmLevel {
+    LOW
+    MEDIUM
+    HIGH
+  }
+  
+  ' notes '
+  note left of ControlRoom
+    Sensors are aggregated, because they
+    physically belong to Reactor, and
+    ControlRoom only reads their measuredValue
+  endnote
+}
+
+package cooling {
+  interface ICoolingSystem {
+    + RemoveHeat(core:ReactorCore, amount:double) : double
+  }
+  
+  class PrimaryLoop {
+    - coolantTemperature : double
+    # flowRate : double
+    + RemoveHeat(core:ReactorCore, amount:double) : double
+  }
+  
+  class EmergencyCoolingSystem {
+    # isActive : bool
+    - waterReserveLiters : double
+    + Activate() : void
+    + RemoveHeat(core:ReactorCore, amount:double) : double
+  }
+  
+  class Pump {
+    - powerKw : double
+    # isRunning : bool
+    + Start() : void
+    + Stop() : void
+    + SetFlowRate(rate:double) : void
+  }
+  
+  class SteamGenerator {
+    # steamPressure : double
+    + TransferHeat(primary:PrimaryLoop) : double
+  }
+  
+  class SecondaryLoop {
+    # steamTemperature : double
+    + GetSteam() : double
+  }
+}
+
+' relations in package core
+Fuel <|-- UraniumFuel
+Fuel <|-- MOXFuel
+FuelRod --> "1" Fuel
+ReactorCore o-- "100..300" FuelRod
+ReactorCore o-- "50..100" ControlRod
+Moderator --> ModeratorType
+Reactor o-- "1" Moderator
+Reactor *-- "1" ReactorCore
+Reactor --> ReactorState
+Reactor --> ICoolingSystem
+
+' relations in package control
+Sensor <|-- TemperatureSensor
+Sensor <|-- PressureSensor
+Sensor <|-- RadiationSensor
+Sensor --> ReactorCore
+ControlRoom o-- "1..*" Operator
+ControlRoom o-- "10..100" Sensor
+ControlRoom o-- "1" Alarm
+ControlRoom --> Reactor
+Operator ..> Alarm
+Operator ..> ReactorCore
+Alarm --> AlarmLevel
+
+' relations in package cooling
+ICoolingSystem <|.. PrimaryLoop
+ICoolingSystem <|.. EmergencyCoolingSystem
+ICoolingSystem ..> ReactorCore
+PrimaryLoop o-- "2..4" Pump
+EmergencyCoolingSystem o-- "2..4" Pump
+SteamGenerator ..> PrimaryLoop
+SteamGenerator ..> SecondaryLoop
+
+@enduml
