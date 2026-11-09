@@ -23,6 +23,7 @@ package core {
   }
   
   class FuelRod {
+    - fuel : Fuel
     - temperature : double
     + FuelRod(fuel:Fuel)
     + Heat(flux:double) : void
@@ -49,13 +50,15 @@ package core {
   }
   
   class Reactor {
+    - core : ReactorCore
+    - moderator : Moderator
+    - coolingSystem : ICoolingSystem
     - state : ReactorState
     + Reactor(core:ReactorCore, moderator:Moderator)
     + Start() : void
     + Stop() : void
     + GetReactorState() : ReactorState
     + GetPowerOutput() : double
-    + RemoveHeat(core:ReactorCore, amount:double) : double
   }
   
   enum ReactorState {
@@ -146,14 +149,16 @@ package cooling {
   }
   
   class PrimaryLoop {
+    - pumps : List<Pump>
     - coolantTemperature : double
     # flowRate : double
     + RemoveHeat(core:ReactorCore, amount:double) : double
   }
   
   class EmergencyCoolingSystem {
-    # isActive : bool
     - waterReserveLiters : double
+    - pumps : List<Pump>
+    # isActive : bool
     + Activate() : void
     + RemoveHeat(core:ReactorCore, amount:double) : double
   }
@@ -167,6 +172,7 @@ package cooling {
   }
   
   class SteamGenerator {
+    - secondaryLoop : SecondaryLoop
     # steamPressure : double
     + TransferHeat(primary:PrimaryLoop) : double
   }
@@ -175,6 +181,12 @@ package cooling {
     # steamTemperature : double
     + GetSteam() : double
   }
+  
+  ' notes '
+  note right of Pump
+    Pump is different in PrimaryLoop
+    and in EmergencyCoolingSystem
+  endnote
 }
 
 ' relations in package core
@@ -187,7 +199,7 @@ Moderator --> ModeratorType
 Reactor o-- "1" Moderator
 Reactor *-- "1" ReactorCore
 Reactor --> ReactorState
-Reactor --> ICoolingSystem
+Reactor --> "1" ICoolingSystem
 
 ' relations in package control
 Sensor <|-- TemperatureSensor
@@ -206,9 +218,9 @@ Alarm --> AlarmLevel
 ICoolingSystem <|.. PrimaryLoop
 ICoolingSystem <|.. EmergencyCoolingSystem
 ICoolingSystem ..> ReactorCore
-PrimaryLoop o-- "2..4" Pump
-EmergencyCoolingSystem o-- "2..4" Pump
+PrimaryLoop *-- "2..4" Pump
+EmergencyCoolingSystem *-- "2..4" Pump
 SteamGenerator ..> PrimaryLoop
-SteamGenerator ..> SecondaryLoop
+SteamGenerator --> "1" SecondaryLoop
 
 @enduml
