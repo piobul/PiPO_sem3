@@ -59,6 +59,7 @@ package core {
     + Stop() : void
     + GetReactorState() : ReactorState
     + GetPowerOutput() : double
+    + GetCore() : ReactorCore
   }
   
   enum ReactorState {
@@ -148,7 +149,10 @@ package control {
   note left of ControlRoom
     Sensors are aggregated, because they
     physically belong to Reactor, and
-    ControlRoom only reads their measuredValue
+    ControlRoom only reads their measuredValue.
+    ControlRoom depends only on ICoolingSystem and
+    ISafetySystem, so new systems can be added
+    without changing it.
   endnote
 }
 
@@ -257,13 +261,17 @@ package safety {
     + GetPressure() : double
     + Activate(core:ReactorCore) : bool
   }
+  
+  note bottom of ScramSystem
+    Activate calls ReactorCore.Scram automatically,
+    while Operator.InitiateScram does the same manually
+  end note
 }
 
 package waste {
   class RadioactiveWaste {
     - activityBq : double
-    - halfLifeTime : double
-    - yearsStored : int
+    - halfLifeYears : double
     + GetRemainingActivity(years:int) : double
   }
   
@@ -289,7 +297,7 @@ Fuel <|-- MOXFuel
 FuelRod --> "1" Fuel
 ReactorCore o-- "100..300" FuelRod
 ReactorCore o-- "50..100" ControlRod
-ReactorCore --> RadioactiveWaste
+ReactorCore ..> RadioactiveWaste
 Moderator --> ModeratorType
 Reactor o-- "1" Moderator
 Reactor *-- "1" ReactorCore
@@ -336,8 +344,5 @@ ISafetySystem ..> ReactorCore
 ' relations in package waste
 SpentFuelPool o-- "0..*" RadioactiveWaste
 FuelStorage o-- "0..*" Fuel
-
-
-
 
 @enduml
