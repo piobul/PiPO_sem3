@@ -52,7 +52,6 @@ package core {
   class Reactor {
     - core : ReactorCore
     - moderator : Moderator
-    - coolingSystem : ICoolingSystem
     - state : ReactorState
     + Reactor(core:ReactorCore, moderator:Moderator)
     + Start() : void
@@ -78,6 +77,11 @@ package core {
     GetThermalPower() is polymorphic
     because Uranium and MOX react
     differently
+  endnote
+  
+  note right of Reactor
+    Reactor cannot be without ReactorCore, but FuelRod
+    and ControlRod can be changed inside ReactorCore
   endnote
 }
 
@@ -106,6 +110,7 @@ package control {
   }
   
   class ControlRoom {
+    - coolingSystems : List<ICoolingSystem>
     - sensors : List<Sensor>
     - operators : List<Operator>
     - alarm : Alarm
@@ -113,6 +118,7 @@ package control {
     + MonitorSensors() : void
     + RaiseAlarm(level:AlarmLevel) : void
     + GetOperatorOnDuty() : Operator
+    + ActivateCooling(amount:double) : double
   }
   
   class Operator {
@@ -159,7 +165,7 @@ package cooling {
     - waterReserveLiters : double
     - pumps : List<Pump>
     # isActive : bool
-    + Activate() : void
+    + Activate(core:ReactorCore) : bool
     + RemoveHeat(core:ReactorCore, amount:double) : double
   }
   
@@ -184,9 +190,65 @@ package cooling {
   
   ' notes '
   note right of Pump
-    Pump is different in PrimaryLoop
-    and in EmergencyCoolingSystem
+    Pump is different in PrimaryLoop, EmergencyCoolingSystem
+    and in Condenser
   endnote
+}
+
+package power {
+  class Turbine {
+    - condenser : Condenser
+    - rotationSpeedRpm : double
+    # maxSteamPressure : double
+    + Spin(secondaryLoop:SecondaryLoop) : double
+  }
+  
+  class Generator {
+    - ratedPowerMw : double
+    - turbine : Turbine
+    - transformer : Transformer
+    + GenerateElectricity() : double
+  }
+  
+  class Transformer {
+    - grid : PowerGrid
+    - inputVoltageKv : double
+    - outputVoltageKv : double
+    + ConvertEnergy(powerMw:double) : double
+  }
+  
+  class PowerGrid {
+    - demandMw : double
+    - currentLoadMw : double
+    + GetDemand() : double
+    + Receive(powerMw:double) : double
+  }
+  
+  class Condenser {
+    - pumps : List<Pump>
+    - coolingWaterTemperature : double
+    + Condense(steamVolume:double) : double
+  }
+}
+
+package safety {
+  interface ISafetySystem {
+    + Activate(core:ReactorCore) : bool
+  }
+  
+  class ScramSystem {
+    - responseTimeMs : int
+    - isArmed : bool
+    + Activate(core:ReactorCore) : bool
+    + Arm() : void
+  }
+  
+  class ContainmentBuilding {
+    - wallThicknessM : double
+    - internalPressure : double
+    + GetPressure() : double
+    + Activate(core:ReactorCore) : bool
+  }
 }
 
 ' relations in package core
@@ -199,7 +261,6 @@ Moderator --> ModeratorType
 Reactor o-- "1" Moderator
 Reactor *-- "1" ReactorCore
 Reactor --> ReactorState
-Reactor --> "1" ICoolingSystem
 
 ' relations in package control
 Sensor <|-- TemperatureSensor
@@ -210,6 +271,7 @@ ControlRoom o-- "1..*" Operator
 ControlRoom o-- "10..100" Sensor
 ControlRoom o-- "1" Alarm
 ControlRoom --> Reactor
+ControlRoom o-- "1..*" ICoolingSystem
 Operator ..> Alarm
 Operator ..> ReactorCore
 Alarm --> AlarmLevel
@@ -222,5 +284,18 @@ PrimaryLoop *-- "2..4" Pump
 EmergencyCoolingSystem *-- "2..4" Pump
 SteamGenerator ..> PrimaryLoop
 SteamGenerator --> "1" SecondaryLoop
+
+' relations in package power
+Turbine ..> SecondaryLoop
+Turbine --> Condenser
+Generator --> Turbine
+Generator --> Transformer
+Transformer --> PowerGrid
+Condenser *-- "2..4" Pump
+
+' relations in package safety
+ISafetySystem <|.. ScramSystem
+ISafetySystem <|.. ContainmentBuilding
+ISafetySystem <|.. EmergencyCoolingSystem
 
 @enduml
