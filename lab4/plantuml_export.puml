@@ -1,5 +1,7 @@
 @startuml
 skinparam classAttributeIconSize 0
+skinparam nodesep 20
+skinparam ranksep 30
 skinparam linetype ortho
 hide empty members
 hide circle
@@ -81,7 +83,7 @@ package core {
     differently
   endnote
   
-  note right of Reactor
+  note as ReactorNote
     Reactor cannot be without ReactorCore, but FuelRod
     and ControlRod can be changed inside ReactorCore
   endnote
@@ -146,7 +148,7 @@ package control {
   }
   
   ' notes '
-  note left of ControlRoom
+  note right of ControlRoom
     Sensors are aggregated, because they
     physically belong to Reactor, and
     ControlRoom only reads their measuredValue.
@@ -196,12 +198,12 @@ package cooling {
   }
   
   ' notes '
-  note right of Pump
+  note bottom of Pump
     Pump is different in PrimaryLoop, EmergencyCoolingSystem
     and in Condenser
   endnote
   
-  note bottom of EmergencyCoolingSystem
+  note top of EmergencyCoolingSystem
     EmergencyCoolingSystem is both ICoolingSystem
     and ISafetySystem
   endnote
@@ -262,7 +264,7 @@ package safety {
     + Activate(core:ReactorCore) : bool
   }
   
-  note bottom of ScramSystem
+  note top of ScramSystem
     Activate calls ReactorCore.Scram automatically,
     while Operator.InitiateScram does the same manually
   end note
@@ -292,57 +294,64 @@ package waste {
 }
 
 ' relations in package core
-Fuel <|-- UraniumFuel
-Fuel <|-- MOXFuel
-FuelRod --> "1" Fuel
-ReactorCore o-- "100..300" FuelRod
-ReactorCore o-- "50..100" ControlRod
+Fuel <|-down- UraniumFuel
+Fuel <|-down- MOXFuel
+FuelRod -down-> "1" Fuel
+ReactorCore o-down- "100..300" FuelRod
+ReactorCore o-down- "50..100" ControlRod
 ReactorCore ..> RadioactiveWaste
-Moderator --> ModeratorType
-Reactor o-- "1" Moderator
-Reactor *-- "1" ReactorCore
-Reactor --> ReactorState
+Moderator -down-> ModeratorType
+Reactor o-left- "1" Moderator
+Reactor *-down- "1" ReactorCore
+Reactor -right-> ReactorState
+ReactorNote .left. ReactorCore
 
 ' relations in package control
-Sensor <|-- TemperatureSensor
-Sensor <|-- PressureSensor
-Sensor <|-- RadiationSensor
-Sensor --> ReactorCore
-ControlRoom o-- "1..*" Operator
-ControlRoom o-- "10..100" Sensor
-ControlRoom o-- "1" Alarm
-ControlRoom --> Reactor
-ControlRoom o-- "1..*" ICoolingSystem
-ControlRoom o-- "1..*" ISafetySystem
-Operator ..> Alarm
-Operator ..> ReactorCore
-Alarm --> AlarmLevel
+Sensor <|-up- TemperatureSensor
+Sensor <|-up- PressureSensor
+Sensor <|-down- RadiationSensor
+Sensor -down-> ReactorCore
+ControlRoom o-up- "10..100" Sensor
+ControlRoom o-up- "1..*" Operator
+ControlRoom o-up- "1" Alarm
+ControlRoom -down-> Reactor
+ControlRoom o-down- "1..*" ICoolingSystem
+ControlRoom o-right- "1..*" ISafetySystem
+Operator .up.> Alarm
+Operator .[norank].> ReactorCore
+Alarm -right-> AlarmLevel
 
 ' relations in package cooling
-ICoolingSystem <|.. PrimaryLoop
-ICoolingSystem <|.. EmergencyCoolingSystem
-ICoolingSystem ..> ReactorCore
-PrimaryLoop *-- "2..4" Pump
-EmergencyCoolingSystem *-- "2..4" Pump
-SteamGenerator ..> PrimaryLoop
-SteamGenerator --> "1" SecondaryLoop
+ICoolingSystem <|.down. PrimaryLoop
+ICoolingSystem <|.down. EmergencyCoolingSystem
+ICoolingSystem .left.> ReactorCore
+PrimaryLoop *-down- "2..4" Pump
+EmergencyCoolingSystem *-down- "2..4" Pump
+SteamGenerator .up.> PrimaryLoop
+SteamGenerator -down-> "1" SecondaryLoop
 
 ' relations in package power
-Turbine ..> SecondaryLoop
-Turbine --> Condenser
-Generator --> Turbine
-Generator --> Transformer
-Transformer --> PowerGrid
-Condenser *-- "2..4" Pump
+Turbine .up.> SecondaryLoop
+Turbine -right-> Condenser
+Generator -up-> Turbine
+Generator -right-> Transformer
+Transformer -right-> PowerGrid
+Condenser *-[norank]- "2..4" Pump
 
 ' relations in package safety
-ISafetySystem <|.. ScramSystem
-ISafetySystem <|.. ContainmentBuilding
-ISafetySystem <|.. EmergencyCoolingSystem
+ISafetySystem <|.right. ScramSystem
+ISafetySystem <|.up. ContainmentBuilding
+ISafetySystem <|.down. EmergencyCoolingSystem
 ISafetySystem ..> ReactorCore
 
 ' relations in package waste
-SpentFuelPool o-- "0..*" RadioactiveWaste
-FuelStorage o-- "0..*" Fuel
+SpentFuelPool o-up- "0..*" RadioactiveWaste
+FuelStorage o-[norank]- "0..*" Fuel
+
+' layout (hidden links)
+ReactorCore -[hidden]right- PrimaryLoop
+ICoolingSystem -[hidden]up- ISafetySystem
+FuelStorage -[hidden]right- RadioactiveWaste
+MOXFuel .[hidden]down.> RadioactiveWaste
 
 @enduml
